@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 启动 APScheduler 定时任务调度器...")
     scheduler.start()
     logger.info("✅ 调度器启动成功")
+    logger.info("测试是否自动打包了")
 
     yield
 
