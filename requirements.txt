@@ -1,0 +1,14 @@
+# FastAPI 定时任务推送服务 - 依赖文件
+
+# Web 框架
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# HTTP 客户端（异步）
+httpx>=0.25.0
+
+# 定时任务调度
+apscheduler>=3.10.0
+
+# 数据验证
+pydantic>=2.5.0
