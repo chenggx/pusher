@@ -2,7 +2,7 @@
 
 ## 📋 项目简介
 
-本项目是一个基于 FastAPI 的定时任务推送服务，可以接收时间和内容参数，设置定时任务，当到达指定时间后自动向推送 API 发送 GET 请求。
+本项目是一个基于 FastAPI 的定时任务推送服务，可以接收时间和内容参数，设置定时任务，当到达指定时间后自动向 Bark/Day.app 推送 API 发送 GET 请求。
 
 **主要功能：**
 - ✅ 设置定时任务（支持任意未来时间）
@@ -35,8 +35,9 @@ python main.py
 curl -X POST "http://127.0.0.1:8000/schedule" \
   -H "Content-Type: application/json" \
   -d '{
-    "schedule_time": "2025-01-10T15:30:00",
-    "content": "测试推送消息"
+    "schedule_time": "2025-01-10T15:30:00+08:00",
+    "content": "测试推送消息",
+    "bark_key": "你的BarkKey"
   }'
 ```
 
@@ -46,8 +47,9 @@ curl -X POST "http://127.0.0.1:8000/schedule" \
 curl -X POST "http://127.0.0.1:8000/schedule" \
   -H "Content-Type: application/json" \
   -d '{
-    "schedule_time": "2026-01-10T12:00:00",
-    "content": "一年后的提醒：记得体检！"
+    "schedule_time": "2026-01-10T12:00:00+08:00",
+    "content": "一年后的提醒：记得体检！",
+    "bark_key": "你的BarkKey"
   }'
 ```
 
@@ -72,34 +74,36 @@ curl http://127.0.0.1:8000/health
 **请求参数：**
 ```json
 {
-  "schedule_time": "2025-01-10T15:30:00",
-  "content": "推送内容"
+  "schedule_time": "2025-01-10T15:30:00+08:00",
+  "content": "推送内容",
+  "bark_key": "你的BarkKey"
 }
 ```
 
 **参数说明：**
-- `schedule_time`：执行时间，ISO 8601 格式（时区无关，使用服务器本地时间）
+- `schedule_time`：执行时间，ISO 8601 格式，必须带时区信息（如 `+08:00`）
 - `content`：推送到手机的内容
+- `bark_key`：Bark 推送密钥
 
 **成功响应：**
 ```json
 {
   "job_id": "abc12345",
-  "schedule_time": "2025-01-10T15:30:00",
+  "schedule_time": "2025-01-10T15:30:00+08:00",
   "content": "推送内容",
   "status": "scheduled",
-  "message": "任务已成功设置，将于 2025-01-10T15:30:00 推送"
+  "message": "任务已成功设置，将于 2025-01-10T15:30:00+08:00 推送"
 }
 ```
 
-**错误响应（时间已过）：**
+**错误响应（时间格式错误）：**
 ```json
 {
   "detail": {
     "error": "时间验证失败",
-    "message": "执行时间必须是未来时间",
-    "current_time": "2025-01-09T10:00:00",
-    "received_time": "2025-01-08T10:00:00"
+    "message": "执行时间必须带时区信息",
+    "current_time": "2025-01-09T10:00:00+08:00",
+    "received_time": "2025-01-10T15:30:00"
   }
 }
 ```
@@ -115,10 +119,10 @@ curl http://127.0.0.1:8000/health
   "tasks": {
     "abc12345": {
       "job_id": "abc12345",
-      "schedule_time": "2025-01-10T15:30:00",
+      "schedule_time": "2025-01-10T15:30:00+08:00",
       "content": "推送内容",
       "status": "completed",
-      "created_at": "2025-01-09T10:00:00"
+      "created_at": "2025-01-09T10:00:00+08:00"
     }
   }
 }
@@ -136,23 +140,11 @@ curl http://127.0.0.1:8000/health
 
 **接口：** `GET /health`
 
-## 🔧 配置说明
+## 🔧 推送配置
 
-### 修改推送 Key
+你可以在 [Bark 官网](https://day.app/) 注册获取免费的推送 Key，然后在请求时传入 `bark_key` 参数即可。
 
-在 `main.py` 文件中修改以下配置：
-
-```python
-# 推送 API 配置
-BARK_KEY = "你的Bark Key"
-PUSH_URL_TEMPLATE = f"https://api.day.app/{BARK_KEY}/{{content}}"
-```
-
-你可以在 [Bark 官网](https://day.app/) 注册获取免费的推送 Key。
-
-### 时区说明
-
-当前版本使用服务器本地时间（时区无关），如需使用 UTC 时间，请修改 `ScheduleRequest` 模型中的时间处理逻辑。
+推送 URL 模板：`https://api.day.app/{bark_key}/{content}`
 
 ## 📝 完整使用示例
 
@@ -160,18 +152,17 @@ PUSH_URL_TEMPLATE = f"https://api.day.app/{BARK_KEY}/{{content}}"
 
 ```python
 import requests
-import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # 设置 10 分钟后的提醒
-reminder_time = datetime.now() + timedelta(minutes=10)
-schedule_time = reminder_time.strftime("%Y-%m-%dT%H:%M:%S")
+reminder_time = datetime.now(timezone.utc) + timedelta(minutes=10)
 
 response = requests.post(
     "http://127.0.0.1:8000/schedule",
     json={
-        "schedule_time": schedule_time,
-        "content": "⏰ 提醒：10分钟后有会议！"
+        "schedule_time": reminder_time.isoformat(),
+        "content": "⏰ 提醒：10分钟后有会议！",
+        "bark_key": "你的BarkKey"
     }
 )
 
@@ -182,10 +173,10 @@ print(response.json())
 
 ```python
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # 设置明年的生日提醒
-next_birthday = datetime.now().replace(
+next_birthday = datetime.now(timezone.utc).replace(
     year=datetime.now().year + 1,
     month=3,
     day=15,
@@ -198,29 +189,15 @@ response = requests.post(
     "http://127.0.0.1:8000/schedule",
     json={
         "schedule_time": next_birthday.isoformat(),
-        "content": "🎂 明天是妈妈生日，别忘了祝福！"
+        "content": "🎂 明天是妈妈生日，别忘了祝福！",
+        "bark_key": "你的BarkKey"
     }
 )
+
+print(response.json())
 ```
 
 ## 🐳 Docker 部署
-
-创建 `Dockerfile`：
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY main.py .
-
-EXPOSE 8000
-
-CMD ["python", "main.py"]
-```
 
 构建和运行：
 
@@ -231,10 +208,10 @@ docker run -d -p 8000:8000 --name push-service scheduled-push
 
 ## ⚠️ 注意事项
 
-1. **时间格式**：必须使用 ISO 8601 格式，例如：`2025-01-10T15:30:00`
+1. **时间格式**：必须使用 ISO 8601 格式，且必须带时区信息，例如：`2025-01-10T15:30:00+08:00`
 2. **时间验证**：设置的时间必须是未来时间，否则会返回错误
 3. **内存存储**：当前使用内存存储任务信息，服务重启后任务会丢失
-4. **推送服务**：确保 `BARK_KEY` 正确配置，否则无法收到推送
+4. **推送服务**：请求中需要传入有效的 `bark_key`，否则无法收到推送
 5. **网络要求**：服务器需要能够访问 `https://api.day.app`
 
 ## 📄 许可证
