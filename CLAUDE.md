@@ -66,4 +66,7 @@ docker run -d -p 8000:8000 --name push-service scheduled-push
 - 数据模型（`ScheduleRequest`, `TaskResponse`）
 - 核心功能（`send_push_notification` 异步推送函数）
 - API 路由（7 个端点）
-- 生命周期管理
+- 生命周期管理_
+
+## git 操作规范
+- 始终用中文来填写消息
