@@ -56,7 +56,7 @@ docker run -d -p 8000:8000 --name push-service scheduled-push
 使用 `@asynccontextmanager` 管理的 `lifespan` 函数，在应用启动时启动调度器，关闭时停止调度器。
 
 ### 关键配置
-- `PUSH_URL_TEMPLATE`: `https://api.day.app/{bark_key}/{content}?level=critical&volume=5`
+- `PUSH_URL_TEMPLATE`: `https://api.day.app/{bark_key}/{content}`
 - 调度器: `AsyncIOScheduler` 实例（全局单例）
 - 任务存储: `task_store: Dict[str, dict]`
 

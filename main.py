@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # 推送 API 配置
 # 这里填入你的 Bark 推送 key
 # BARK_KEY = "6gopxrLawg7Nq6jVVki4HT"
-PUSH_URL_TEMPLATE = f"https://api.day.app/{{bark_key}}/{{content}}"
+PUSH_URL_TEMPLATE = "https://api.day.app/{bark_key}/{content}?level=critical&volume=5"
 
 # 数据库配置（MySQL）
 # 格式: mysql+pymysql://用户名:密码@主机:端口/数据库名

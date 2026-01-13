@@ -144,7 +144,7 @@ curl http://127.0.0.1:8000/health
 
 你可以在 [Bark 官网](https://day.app/) 注册获取免费的推送 Key，然后在请求时传入 `bark_key` 参数即可。
 
-推送 URL 模板：`https://api.day.app/{bark_key}/{content}`
+推送 URL 模板：`https://api.day.app/{bark_key}/{content}?level=critical&volume=5`
 
 ## 📝 完整使用示例
 
